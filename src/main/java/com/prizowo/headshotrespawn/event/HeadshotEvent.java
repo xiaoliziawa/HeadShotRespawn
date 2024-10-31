@@ -29,7 +29,6 @@ import net.minecraft.sounds.SoundEvent;
 @Mod.EventBusSubscriber(modid = Headshotrespawn.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class HeadshotEvent {
 
-    // 存储玩家的连续爆头次数
     private static final HashMap<UUID, HeadshotStreak> playerStreaks = new HashMap<>();
     
     private static class HeadshotStreak {
@@ -48,7 +47,6 @@ public class HeadshotEvent {
             return;
         }
         
-        // 检查玩家的爆头模式
         if (PlayerHeadshotData.getPlayerMode(player.getUUID()) != 0) {
             return;
         }
@@ -128,10 +126,8 @@ public class HeadshotEvent {
                     );
                 }
 
-                // 处理连续爆头
                 handleHeadshotStreak(player, target);
 
-                // 处理随机特殊效果
                 if (player.getRandom().nextFloat() < Config.SPECIAL_EFFECT_CHANCE.get()) {
                     applyRandomSpecialEffect(player, target);
                 }
@@ -152,13 +148,11 @@ public class HeadshotEvent {
         long currentTime = System.currentTimeMillis();
         HeadshotStreak streak = playerStreaks.computeIfAbsent(playerId, k -> new HeadshotStreak());
 
-        // 如果距离上次爆头超过10秒，重置计数
         if (currentTime - streak.lastHeadshotTime > Config.STREAK_TIMEOUT_SECONDS.get() * 1000) {
             streak.count = 0;
         }
 
         streak.count++;
-        // 如果达到30次，重置计数并给予特殊奖励
         if (streak.count >= 30) {
             giveMaxStreakReward(player);
             streak.count = 0;
@@ -166,7 +160,6 @@ public class HeadshotEvent {
 
         streak.lastHeadshotTime = currentTime;
 
-        // 根据连续爆头次数给予奖励
         handleStreakRewards(player, streak.count);
     }
 
@@ -181,7 +174,6 @@ public class HeadshotEvent {
         }
     }
 
-    // 新的奖励方法
     private static void giveSpeedBoost(Player player) {
         player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 200, 1, false, false));
         createColoredParticles(player, ParticleTypes.CLOUD);
@@ -221,23 +213,19 @@ public class HeadshotEvent {
         player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 400, 1, false, false));
         player.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 400, 1, false, false));
         
-        // 生成特效
         createMaxStreakEffect(player);
         
-        // 播放音效组合
         playMaxStreakSounds(player);
         
-        // 给予物品奖励
         giveMaxStreakItems(player);
     }
 
     private static void createMaxStreakEffect(Player player) {
         if (player.level() instanceof ServerLevel serverLevel) {
-            // 创建螺旋上升的粒子效果
             double radius = 1.0;
             for (int y = 0; y < 20; y++) {
                 for (int i = 0; i < 360; i += 20) {
-                    double angle = Math.toRadians(i + y * 18); // 螺旋效果
+                    double angle = Math.toRadians(i + y * 18);
                     double x = player.getX() + Math.cos(angle) * radius;
                     double z = player.getZ() + Math.sin(angle) * radius;
                     
@@ -259,7 +247,6 @@ public class HeadshotEvent {
     }
 
     private static void giveMaxStreakItems(Player player) {
-        // 给予一些有用的物品
         ItemStack[] rewards = {
             new ItemStack(Items.ENCHANTED_GOLDEN_APPLE),
             new ItemStack(Items.ARROW, 64),
@@ -292,7 +279,7 @@ public class HeadshotEvent {
     private static void playRewardSound(Player player, SoundEvent sound, float volume) {
         if (!player.level().isClientSide()) {
             player.level().playSound(
-                null,  // null 表示所有玩家都能听到
+                null,
                 player.getX(),
                 player.getY(),
                 player.getZ(),
@@ -321,37 +308,36 @@ public class HeadshotEvent {
     }
 
     private static void applyRandomSpecialEffect(Player player, LivingEntity target) {
-        switch (player.getRandom().nextInt(8)) { // 增加更多效果
-            case 0 -> { // 目标变小
+        switch (player.getRandom().nextInt(8)) {
+            case 0 -> {
                 if (target instanceof Player targetPlayer) {
                     targetPlayer.addEffect(new MobEffectInstance(MobEffects.CONFUSION, 200, 0, false, false));
                 }
-                // 缩小粒子效果
                 spawnShrinkParticles(target);
             }
-            case 1 -> { // 冰冻效果
+            case 1 -> {
                 target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100, 5, false, false));
                 spawnFrostParticles(target);
             }
-            case 2 -> { // 彩虹效果
+            case 2 -> {
                 createRainbowTrail(player);
             }
-            case 3 -> { // 生命恢复
+            case 3 -> {
                 player.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 100, 2, false, false));
                 player.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, 200, 1, false, false));
             }
-            case 4 -> { // 跳跃提升
+            case 4 -> {
                 player.addEffect(new MobEffectInstance(MobEffects.JUMP, 200, 2, false, false));
             }
-            case 5 -> { // 击退效果
+            case 5 -> {
                 Vec3 knockback = target.position().subtract(player.position()).normalize().scale(2);
                 target.setDeltaMovement(knockback.x, 0.5, knockback.z);
             }
-            case 6 -> { // 生成金苹果
+            case 6 -> {
                 ItemStack goldenApple = new ItemStack(Items.GOLDEN_APPLE);
                 target.spawnAtLocation(goldenApple);
             }
-            case 7 -> { // 生成烟花
+            case 7 -> {
                 spawnFireworks(target);
             }
         }
@@ -395,7 +381,6 @@ public class HeadshotEvent {
                 double x = player.getX() + Math.cos(angle) * radius;
                 double z = player.getZ() + Math.sin(angle) * radius;
                 
-                // 使用不同的粒子
                 switch (i / 20 % 5) {
                     case 0 -> serverLevel.sendParticles(
                         ParticleTypes.FLAME,
@@ -431,7 +416,6 @@ public class HeadshotEvent {
         if (!target.level().isClientSide()) {
             ItemStack fireworkRocket = new ItemStack(Items.FIREWORK_ROCKET);
             target.spawnAtLocation(fireworkRocket);
-            // 播放烟花音效
             target.level().playSound(
                 null,
                 target.getX(),

@@ -18,31 +18,31 @@ public class Config {
         BUILDER.push("Headshot Configuration");
 
         HEADSHOT_DAMAGE_MULTIPLIER_WITHOUT_HELMET = BUILDER
-            .comment("无头盔爆头伤害倍数")
+            .comment("Headshot damage multiplier when not wearing a helmet")
             .defineInRange("noHelmetMultiplier", 2.0, 1.0, 10.0);
 
         HEADSHOT_DAMAGE_MULTIPLIER_WITH_HELMET = BUILDER
-            .comment("戴头盔爆头伤害倍数")
+            .comment("Headshot damage multiplier when wearing a helmet")
             .defineInRange("withHelmetMultiplier", 1.5, 1.0, 10.0);
 
         STREAK_TIMEOUT_SECONDS = BUILDER
-            .comment("连续爆头计数重置时间（秒）")
+            .comment("Time in seconds before streak count resets")
             .defineInRange("streakTimeout", 10, 1, 60);
 
         SPECIAL_DROP_CHANCE = BUILDER
-            .comment("特殊物品掉落概率")
+            .comment("Chance for special items to drop")
             .defineInRange("specialDropChance", 0.05, 0.0, 1.0);
 
         ENABLE_STREAK_REWARDS = BUILDER
-            .comment("是否启用连续爆头奖励系统")
+            .comment("Enable the headshot streak reward system")
             .define("enableStreakRewards", true);
 
         SPECIAL_EFFECT_CHANCE = BUILDER
-            .comment("特殊效果触发概率")
+            .comment("Chance for special effects to trigger")
             .defineInRange("specialEffectChance", 0.1, 0.0, 1.0);
 
         ENABLE_SPECIAL_EFFECTS = BUILDER
-            .comment("是否启用特殊效果")
+            .comment("Enable special effects system")
             .define("enableSpecialEffects", true);
 
         BUILDER.pop();

@@ -1,0 +1,9 @@
+{
+  "key.headshotrespawn.toggle": "Toggle Headshot Mode",
+  "key.categories.headshotrespawn": "Headshot System",
+  
+  "message.headshotrespawn.mode.switch": "Switched to: %s",
+  "message.headshotrespawn.mode.normal": "Normal Headshot Mode",
+  "message.headshotrespawn.mode.effect": "Effect Headshot Mode",
+  "message.headshotrespawn.mode.physics": "Physics Headshot Mode"
+} 

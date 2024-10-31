@@ -25,7 +25,6 @@ public class HeadshotModePacket {
         ctx.get().enqueueWork(() -> {
             ServerPlayer player = ctx.get().getSender();
             if (player != null) {
-                // 更新玩家的爆头模式
                 PlayerHeadshotData.setPlayerMode(player.getUUID(), mode);
             }
         });

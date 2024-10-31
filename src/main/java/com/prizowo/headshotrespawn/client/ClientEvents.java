@@ -15,9 +15,9 @@ import net.minecraftforge.fml.common.Mod;
 public class ClientEvents {
     private static int currentMode = 0;
     private static final String[] MODE_NAMES = {
-        "普通爆头模式",
-        "特效爆头模式",
-        "物理爆头模式"
+        "message.headshotrespawn.mode.normal",
+        "message.headshotrespawn.mode.effect",
+        "message.headshotrespawn.mode.physics"
     };
 
     @SubscribeEvent
@@ -30,16 +30,13 @@ public class ClientEvents {
         @SubscribeEvent
         public static void onKeyInput(InputEvent.Key event) {
             if (KeyBindings.TOGGLE_HEADSHOT_MODE.consumeClick()) {
-                // 切换模式
                 currentMode = (currentMode + 1) % MODE_NAMES.length;
-                
-                // 发送到服务器
                 NetworkHandler.INSTANCE.sendToServer(new HeadshotModePacket(currentMode));
                 
-                // 显示当前模式
                 if (Minecraft.getInstance().player != null) {
                     Minecraft.getInstance().player.displayClientMessage(
-                        Component.literal("§6切换到：§e" + MODE_NAMES[currentMode]),
+                        Component.translatable("message.headshotrespawn.mode.switch", 
+                            Component.translatable(MODE_NAMES[currentMode])),
                         true
                     );
                 }

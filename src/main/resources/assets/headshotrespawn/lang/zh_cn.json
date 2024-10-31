@@ -1,4 +1,9 @@
 {
   "key.headshotrespawn.toggle": "切换爆头模式",
-  "key.categories.headshotrespawn": "爆头系统"
+  "key.categories.headshotrespawn": "爆头系统",
+  
+  "message.headshotrespawn.mode.switch": "切换到：%s",
+  "message.headshotrespawn.mode.normal": "普通爆头模式",
+  "message.headshotrespawn.mode.effect": "特效爆头模式",
+  "message.headshotrespawn.mode.physics": "物理爆头模式"
 } 

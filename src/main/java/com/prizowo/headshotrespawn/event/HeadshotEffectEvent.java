@@ -41,36 +41,28 @@ public class HeadshotEffectEvent {
             return;
         }
 
-        // 计算头部击中区域
         double headStart = target.position().add(0.0, target.getDimensions(target.getPose()).height * 0.85, 0.0).y - 0.17;
 
         if (event.getSource().getSourcePosition().y > headStart && !target.isDamageSourceBlocked(event.getSource())) {
-            // 基础伤害计算
             boolean hasHelmet = !target.getItemBySlot(EquipmentSlot.HEAD).isEmpty();
             float damageMultiplier = hasHelmet ?
                 Config.HEADSHOT_DAMAGE_MULTIPLIER_WITH_HELMET.get().floatValue() : 
                 Config.HEADSHOT_DAMAGE_MULTIPLIER_WITHOUT_HELMET.get().floatValue();
             event.setAmount(event.getAmount() * damageMultiplier);
 
-            // 添加基础效果
             target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 20, 3, false, false));
             target.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, 40, 0, false, false));
 
-            // 生成爆头特效
             createHeadshotEffect(target);
 
-            // 如果是玩家射击
             if (attacker instanceof Player player) {
-                // 播放爆头音效
                 playHeadshotSound(player);
                 
-                // 随机触发特殊效果
-                if (player.getRandom().nextFloat() < 0.2f) { // 20%概率触发特殊效果
+                if (player.getRandom().nextFloat() < 0.2f) {
                     applySpecialEffect(player, target);
                 }
             }
 
-            // 处理头盔损坏
             if (hasHelmet) {
                 target.getItemBySlot(EquipmentSlot.HEAD).hurtAndBreak(
                     (int)(event.getAmount() / 2),
@@ -83,7 +75,6 @@ public class HeadshotEffectEvent {
 
     private static void createHeadshotEffect(LivingEntity target) {
         if (!target.level().isClientSide() && target.level() instanceof ServerLevel serverLevel) {
-            // 创建爆炸式粒子效果
             for (int i = 0; i < 20; i++) {
                 double angle = Math.PI * 2 * target.getRandom().nextDouble();
                 double radius = 0.5 + target.getRandom().nextDouble() * 0.5;
@@ -92,18 +83,16 @@ public class HeadshotEffectEvent {
                 double offsetY = target.getRandom().nextDouble() * 0.5;
                 double offsetZ = Math.sin(angle) * radius;
 
-                // 血液粒子效果
                 serverLevel.sendParticles(
                     ParticleTypes.DAMAGE_INDICATOR,
                     target.getX(),
                     target.getY() + target.getBbHeight() * 0.8,
                     target.getZ(),
-                    3, // 增加粒子数量
+                    3,
                     offsetX, offsetY, offsetZ,
                     0.1
                 );
 
-                // 暴击粒子效果
                 serverLevel.sendParticles(
                     ParticleTypes.CRIT,
                     target.getX(),
@@ -119,7 +108,6 @@ public class HeadshotEffectEvent {
 
     private static void playHeadshotSound(Player player) {
         if (!player.level().isClientSide()) {
-            // 播放组合音效
             player.level().playSound(
                 null,
                 player.getX(),
@@ -131,7 +119,6 @@ public class HeadshotEffectEvent {
                 1.0F
             );
             
-            // 额外的打击音效
             player.level().playSound(
                 null,
                 player.getX(),
@@ -156,16 +143,13 @@ public class HeadshotEffectEvent {
     }
 
     private static void applyExplosiveEffect(LivingEntity target) {
-        // 创建一个小型爆炸，不破坏方块
-        target.level().explode(null, target.getX(), target.getY(), target.getZ(), 
+        target.level().explode(null, target.getX(), target.getY(), target.getZ(),
             1.0F, false, Level.ExplosionInteraction.NONE);
     }
 
     private static void applyFreezeEffect(LivingEntity target) {
-        // 冰冻效果
         target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100, 10, false, false));
         if (target.level() instanceof ServerLevel serverLevel) {
-            // 冰雪粒子效果
             for (int i = 0; i < 50; i++) {
                 serverLevel.sendParticles(
                     ParticleTypes.SNOWFLAKE,
@@ -177,14 +161,11 @@ public class HeadshotEffectEvent {
     }
 
     private static void applyLevitationEffect(LivingEntity target) {
-        // 让目标短暂漂浮
         target.addEffect(new MobEffectInstance(MobEffects.LEVITATION, 40, 0, false, false));
-        // 添加发光效果便于追踪
         target.addEffect(new MobEffectInstance(MobEffects.GLOWING, 60, 0, false, false));
     }
 
     private static void applyLootExplosionEffect(LivingEntity target) {
-        // 生成一些随机物品
         ItemStack[] loot = {
             new ItemStack(Items.GOLD_NUGGET, 1 + target.getRandom().nextInt(3)),
             new ItemStack(Items.ARROW, 1 + target.getRandom().nextInt(5)),
@@ -193,7 +174,7 @@ public class HeadshotEffectEvent {
         };
 
         for (ItemStack item : loot) {
-            if (target.getRandom().nextFloat() < 0.3f) { // 30%几率生成每个物品
+            if (target.getRandom().nextFloat() < 0.3f) {
                 ItemEntity itemEntity = new ItemEntity(
                     target.level(),
                     target.getX(),
@@ -201,7 +182,6 @@ public class HeadshotEffectEvent {
                     target.getZ(),
                     item
                 );
-                // 给物品一个随机的抛射速度
                 itemEntity.setDeltaMovement(
                     (target.getRandom().nextDouble() - 0.5) * 0.3,
                     target.getRandom().nextDouble() * 0.2 + 0.1,
@@ -213,9 +193,7 @@ public class HeadshotEffectEvent {
     }
 
     private static void applyThunderEffect(LivingEntity target) {
-        // 生成闪电特效
         if (target.level() instanceof ServerLevel serverLevel) {
-            // 闪电粒子效果
             for (int i = 0; i < 50; i++) {
                 serverLevel.sendParticles(
                     ParticleTypes.ELECTRIC_SPARK,
@@ -227,7 +205,6 @@ public class HeadshotEffectEvent {
                     0.1
                 );
             }
-            // 播放雷击音效
             target.level().playSound(
                 null,
                 target.getX(),
