@@ -15,14 +15,22 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraftforge.event.entity.living.LivingDamageEvent;
+import net.minecraftforge.event.entity.living.LivingHurtEvent;
+import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
 @Mod.EventBusSubscriber(modid = Headshotrespawn.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class HeadshotEvent {
 
-    @SubscribeEvent
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
     public static void onHeadshot(LivingDamageEvent event) {
+        String eventKey = "headshot_processed_" + event.getSource().getMsgId();
+        
+        if (event.getEntity().getPersistentData().contains(eventKey)) {
+            return;
+        }
+
         if (!event.getSource().is(DamageTypeTags.IS_PROJECTILE)) {
             return;
         }
@@ -38,13 +46,24 @@ public class HeadshotEvent {
         double headStart = target.position().add(0.0, target.getDimensions(target.getPose()).height * 0.85, 0.0).y - 0.17;
 
         if (event.getSource().getSourcePosition().y > headStart && !target.isDamageSourceBlocked(event.getSource())) {
+            event.getEntity().getPersistentData().putBoolean(eventKey, true);
+            
             boolean hasHelmet = !target.getItemBySlot(EquipmentSlot.HEAD).isEmpty();
             
-            float damageMultiplier = hasHelmet ?
-                Config.HEADSHOT_DAMAGE_MULTIPLIER_WITH_HELMET.get().floatValue() : 
-                Config.HEADSHOT_DAMAGE_MULTIPLIER_WITHOUT_HELMET.get().floatValue();
+            float baseMultiplier = Config.HEADSHOT_DAMAGE_MULTIPLIER_WITHOUT_HELMET.get().floatValue();
+            float helmetMultiplier = Math.min(
+                Config.HEADSHOT_DAMAGE_MULTIPLIER_WITH_HELMET.get().floatValue(),
+                baseMultiplier * 0.75f
+            );
+            
+            float damageMultiplier = hasHelmet ? helmetMultiplier : baseMultiplier;
 
-            event.setAmount(event.getAmount() * damageMultiplier);
+            float newDamage = Math.min(
+                event.getAmount() * damageMultiplier, 
+                Config.MAX_HEADSHOT_DAMAGE.get().floatValue()
+            );
+
+            event.setAmount(newDamage);
 
             target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 20, 3, false, false));
             target.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, 40, 0, false, false));
@@ -57,10 +76,6 @@ public class HeadshotEvent {
                     double offsetX = Math.cos(angle) * radius;
                     double offsetY = target.getRandom().nextDouble() * 0.5;
                     double offsetZ = Math.sin(angle) * radius;
-                    
-                    double speedX = offsetX * 0.2;
-                    double speedY = 0.1 + target.getRandom().nextDouble() * 0.1;
-                    double speedZ = offsetZ * 0.2;
 
                     serverLevel.sendParticles(
                         ParticleTypes.FIREWORK,
@@ -106,6 +121,22 @@ public class HeadshotEvent {
                     (p) -> p.broadcastBreakEvent(EquipmentSlot.HEAD)
                 );
             }
+
+            if (target.level() instanceof ServerLevel serverLevel) {
+                serverLevel.getServer().tell(new net.minecraft.server.TickTask(
+                    serverLevel.getServer().getTickCount() + 1,
+                    () -> event.getEntity().getPersistentData().remove(eventKey)
+                ));
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public static void onLivingHurt(LivingHurtEvent event) {
+        if (!event.getSource().is(DamageTypeTags.IS_PROJECTILE)) {
+            event.getEntity().getPersistentData().getAllKeys().stream()
+                .filter(key -> key.startsWith("headshot_processed_"))
+                .forEach(key -> event.getEntity().getPersistentData().remove(key));
         }
     }
 } 
